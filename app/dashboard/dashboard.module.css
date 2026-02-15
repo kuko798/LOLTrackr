@@ -1,0 +1,96 @@
+.dashboardPage {
+    min-height: calc(100vh - 80px);
+    padding: var(--spacing-2xl) 0;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-2xl);
+}
+
+.videoGrid {
+    margin-top: var(--spacing-xl);
+}
+
+.videoItem {
+    position: relative;
+}
+
+.statusBadge {
+    margin-top: var(--spacing-sm);
+}
+
+.statusBadge span {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.completed {
+    background: hsla(140, 70%, 50%, 0.2);
+    color: var(--success);
+}
+
+.processing {
+    background: hsla(200, 100%, 50%, 0.2);
+    color: var(--secondary);
+}
+
+.pending {
+    background: hsla(50, 100%, 60%, 0.2);
+    color: var(--accent-bright);
+}
+
+.failed {
+    background: hsla(0, 85%, 60%, 0.2);
+    color: var(--error);
+}
+
+.deleteBtn {
+    width: 100%;
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--bg-darker);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--error);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.deleteBtn:hover {
+    background: hsla(0, 85%, 60%, 0.1);
+    border-color: var(--error);
+}
+
+.loading {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--text-muted);
+}
+
+.empty p {
+    font-size: 1.125rem;
+    margin-bottom: var(--spacing-xl);
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-md);
+    }
+}

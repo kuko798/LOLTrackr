@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  email         String    @unique
+  password      String
+  displayName   String
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  videos        Video[]
+}
+
+model Video {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id])
+  title             String
+  description       String?
+  originalVideoUrl  String
+  processedVideoUrl String?
+  thumbnailUrl      String?
+  generatedAudioText String?
+  duration          Float?
+  views             Int       @default(0)
+  processingStatus  String    @default("pending") // pending | processing | completed | failed
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}

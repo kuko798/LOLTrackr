@@ -1,0 +1,133 @@
+.videoPage {
+    padding: var(--spacing-xl) 0;
+    min-height: calc(100vh - 80px);
+}
+
+.videoContainer {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: var(--spacing-xl);
+}
+
+.playerSection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.processingMessage {
+    aspect-ratio: 16/9;
+    background: var(--bg-darker);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 1.125rem;
+}
+
+.videoInfo {
+    padding: var(--spacing-md) 0;
+}
+
+.title {
+    font-size: 1.75rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.meta {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    margin-bottom: var(--spacing-lg);
+}
+
+.description {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-lg);
+}
+
+.aiScript {
+    background: var(--bg-card);
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    backdrop-filter: blur(10px);
+}
+
+.aiScript h3 {
+    font-size: 1.125rem;
+    margin-bottom: var(--spacing-md);
+    color: var(--accent);
+}
+
+.aiScript p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.creatorCard h3 {
+    font-size: 1.125rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.creatorLink {
+    text-decoration: none;
+    color: inherit;
+}
+
+.creatorInfo {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    transition: all var(--transition-base);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+}
+
+.creatorLink:hover .creatorInfo {
+    background: var(--bg-darker);
+}
+
+.avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: white;
+}
+
+.displayName {
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+.username {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+@media (max-width: 1024px) {
+    .videoContainer {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        order: 2;
+    }
+}

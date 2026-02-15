@@ -1,0 +1,71 @@
+.profilePage {
+    min-height: calc(100vh - 80px);
+    padding: var(--spacing-2xl) 0;
+}
+
+.profileHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-2xl);
+}
+
+.avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+}
+
+.userInfo h1 {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-xs);
+}
+
+.joinDate {
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+}
+
+.videosSection {
+    margin-top: var(--spacing-2xl);
+}
+
+.videosSection h2 {
+    margin-bottom: var(--spacing-lg);
+}
+
+.videoGrid {
+    margin-top: var(--spacing-xl);
+}
+
+.empty {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--text-muted);
+    font-size: 1.125rem;
+}
+
+@media (max-width: 768px) {
+    .profileHeader {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+    }
+
+    .userInfo h1 {
+        font-size: 1.5rem;
+    }
+}

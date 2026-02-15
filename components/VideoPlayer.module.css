@@ -1,0 +1,51 @@
+.playerContainer {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: var(--bg-darker);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    cursor: pointer;
+}
+
+.controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    padding: var(--spacing-lg);
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+.playerContainer:hover .controls {
+    opacity: 1;
+}
+
+.controlBtn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    transition: transform var(--transition-fast);
+}
+
+.controlBtn:hover {
+    transform: scale(1.1);
+}
+
+.controlBtn:active {
+    transform: scale(0.95);
+}
