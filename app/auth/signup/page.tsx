@@ -71,7 +71,7 @@ export default function SignUpPage() {
                 setError('Account created but sign in failed. Please sign in manually.');
                 setTimeout(() => router.push('/auth/signin'), 2000);
             } else {
-                router.push('/');
+                router.push('/dashboard');
                 router.refresh();
             }
         } catch (err) {
@@ -96,7 +96,7 @@ export default function SignUpPage() {
                 {providers.google && (
                     <button
                         type="button"
-                        onClick={() => signIn('google', { callbackUrl: '/' })}
+                        onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
                         className={`btn btn-secondary ${styles.googleBtn}`}
                         style={{ width: '100%', marginTop: 'var(--spacing-xl)' }}
                     >
@@ -113,7 +113,7 @@ export default function SignUpPage() {
                 {providers.facebook && (
                     <button
                         type="button"
-                        onClick={() => signIn('facebook', { callbackUrl: '/' })}
+                        onClick={() => signIn('facebook', { callbackUrl: '/dashboard' })}
                         className={`btn btn-secondary ${styles.socialBtn}`}
                         style={{ width: '100%', marginTop: 'var(--spacing-md)' }}
                     >
@@ -127,7 +127,7 @@ export default function SignUpPage() {
                 {providers.twitter && (
                     <button
                         type="button"
-                        onClick={() => signIn('twitter', { callbackUrl: '/' })}
+                        onClick={() => signIn('twitter', { callbackUrl: '/dashboard' })}
                         className={`btn btn-secondary ${styles.socialBtn}`}
                         style={{ width: '100%', marginTop: 'var(--spacing-md)' }}
                     >
