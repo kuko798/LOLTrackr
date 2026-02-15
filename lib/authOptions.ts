@@ -4,6 +4,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import FacebookProvider from 'next-auth/providers/facebook';
 import TwitterProvider from 'next-auth/providers/twitter';
 import bcrypt from 'bcryptjs';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 
 declare module 'next-auth' {
@@ -76,16 +77,39 @@ export const authOptions: NextAuthOptions = {
                 });
 
                 if (!dbUser) {
-                    const username = user.email.split('@')[0].toLowerCase();
-                    dbUser = await prisma.user.create({
-                        data: {
-                            email: user.email,
-                            username,
-                            displayName: user.name || username,
-                            password: await bcrypt.hash(Math.random().toString(36), 10),
-                            avatarUrl: user.image || '',
-                        },
-                    });
+                    const baseUsername = user.email
+                        .split('@')[0]
+                        .toLowerCase()
+                        .replace(/[^a-z0-9_]/g, '')
+                        .slice(0, 20) || 'user';
+
+                    for (let attempt = 0; attempt < 10; attempt++) {
+                        const candidate = attempt === 0 ? baseUsername : `${baseUsername}${attempt}`;
+                        try {
+                            dbUser = await prisma.user.create({
+                                data: {
+                                    email: user.email,
+                                    username: candidate,
+                                    displayName: user.name || candidate,
+                                    password: await bcrypt.hash(Math.random().toString(36), 10),
+                                    avatarUrl: user.image || '',
+                                },
+                            });
+                            break;
+                        } catch (error) {
+                            if (
+                                error instanceof Prisma.PrismaClientKnownRequestError &&
+                                error.code === 'P2002'
+                            ) {
+                                continue;
+                            }
+                            throw error;
+                        }
+                    }
+
+                    if (!dbUser) {
+                        throw new Error('Failed to create OAuth user');
+                    }
                 }
 
                 token.id = dbUser.id;
