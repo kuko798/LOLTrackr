@@ -21,19 +21,6 @@ declare module 'next-auth' {
 
 export const authOptions: NextAuthOptions = {
     providers: [
-        GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID || '',
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-        }),
-        FacebookProvider({
-            clientId: process.env.FACEBOOK_CLIENT_ID || '',
-            clientSecret: process.env.FACEBOOK_CLIENT_SECRET || '',
-        }),
-        TwitterProvider({
-            clientId: process.env.TWITTER_CLIENT_ID || '',
-            clientSecret: process.env.TWITTER_CLIENT_SECRET || '',
-            version: '2.0',
-        }),
         CredentialsProvider({
             name: 'Credentials',
             credentials: {
@@ -117,3 +104,31 @@ export const authOptions: NextAuthOptions = {
     },
     secret: process.env.NEXTAUTH_SECRET,
 };
+
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    authOptions.providers.push(
+        GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        })
+    );
+}
+
+if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
+    authOptions.providers.push(
+        FacebookProvider({
+            clientId: process.env.FACEBOOK_CLIENT_ID,
+            clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+        })
+    );
+}
+
+if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
+    authOptions.providers.push(
+        TwitterProvider({
+            clientId: process.env.TWITTER_CLIENT_ID,
+            clientSecret: process.env.TWITTER_CLIENT_SECRET,
+            version: '2.0',
+        })
+    );
+}
