@@ -7,14 +7,21 @@ import { promisify } from 'util';
 const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+function getOpenAIClient() {
+    if (!process.env.OPENAI_API_KEY) {
+        throw new Error('OPENAI_API_KEY is not configured');
+    }
+
+    return new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+    });
+}
 
 /**
  * Generate brain rot commentary using OpenAI
  */
 export async function generateBrainRotScript(videoTitle: string): Promise<string> {
+    const openai = getOpenAIClient();
     const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
@@ -37,6 +44,7 @@ export async function generateBrainRotScript(videoTitle: string): Promise<string
  * Generate audio from text using OpenAI TTS
  */
 export async function generateAudio(text: string, outputPath: string): Promise<string> {
+    const openai = getOpenAIClient();
     const mp3 = await openai.audio.speech.create({
         model: 'tts-1',
         voice: 'onyx', // Changed to onyx for more energetic voice
