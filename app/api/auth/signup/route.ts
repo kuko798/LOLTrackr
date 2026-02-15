@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 
 export async function POST(req: Request) {
@@ -56,10 +57,27 @@ export async function POST(req: Request) {
             },
             { status: 201 }
         );
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Signup error:', error);
+
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                return NextResponse.json(
+                    { error: 'User with this email or username already exists' },
+                    { status: 400 }
+                );
+            }
+        }
+
+        if (error instanceof Prisma.PrismaClientInitializationError) {
+            return NextResponse.json(
+                { error: 'Service temporarily unavailable. Please try again shortly.' },
+                { status: 503 }
+            );
+        }
+
         return NextResponse.json(
-            { error: error.message || 'Failed to create user' },
+            { error: 'Failed to create user' },
             { status: 500 }
         );
     }
