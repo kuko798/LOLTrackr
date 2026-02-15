@@ -4,12 +4,13 @@ import VideoCard from '@/components/VideoCard';
 import styles from './profile.module.css';
 
 interface ProfilePageProps {
-    params: { username: string };
+    params: Promise<{ username: string }>;
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
+    const { username } = await params;
     const user = await prisma.user.findUnique({
-        where: { username: params.username }
+        where: { username }
     });
 
     if (!user) {

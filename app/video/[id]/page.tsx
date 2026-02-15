@@ -4,12 +4,13 @@ import VideoPlayer from '@/components/VideoPlayer';
 import styles from './video.module.css';
 
 interface VideoPageProps {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }
 
 export default async function VideoPage({ params }: VideoPageProps) {
+    const { id } = await params;
     const video = await prisma.video.findUnique({
-        where: { id: params.id },
+        where: { id },
         include: {
             user: {
                 select: {
@@ -27,7 +28,7 @@ export default async function VideoPage({ params }: VideoPageProps) {
 
     // Increment views (async, non-blocking for response)
     prisma.video.update({
-        where: { id: params.id },
+        where: { id },
         data: { views: { increment: 1 } }
     }).catch(console.error);
 
