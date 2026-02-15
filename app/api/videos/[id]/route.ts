@@ -3,11 +3,12 @@ import prisma from '@/lib/prisma';
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await context.params;
         const video = await prisma.video.findUnique({
-            where: { id: params.id },
+            where: { id },
             include: {
                 user: {
                     select: {
@@ -35,13 +36,14 @@ export async function GET(
 
 export async function PUT(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await context.params;
         const { title, description } = await req.json();
 
         const video = await prisma.video.update({
-            where: { id: params.id },
+            where: { id },
             data: { title, description }
         });
 
@@ -61,11 +63,12 @@ export async function PUT(
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await context.params;
         const video = await prisma.video.delete({
-            where: { id: params.id }
+            where: { id }
         });
 
         if (!video) {
