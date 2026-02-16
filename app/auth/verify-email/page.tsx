@@ -1,11 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import styles from '../signin/auth.module.css';
 
 export default function VerifyEmailPage() {
+    return (
+        <Suspense fallback={
+            <div className={styles.authContainer}>
+                <div className={`${styles.authCard} card fade-in`}>
+                    <h1 className="gradient-text text-center">Email Verification</h1>
+                    <p className="text-center text-muted">Verifying your email...</p>
+                </div>
+            </div>
+        }>
+            <VerifyEmailContent />
+        </Suspense>
+    );
+}
+
+function VerifyEmailContent() {
     const params = useSearchParams();
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [message, setMessage] = useState('Verifying your email...');
