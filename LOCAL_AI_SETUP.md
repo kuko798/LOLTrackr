@@ -40,3 +40,40 @@ When `LOCAL_AI_BASE_URL` is set:
 
 - This runs on your own machine, so usage cost is compute only.
 - Model downloads are large and first startup can be slow.
+
+## Deploy `server.py` as a hosted service
+
+You can deploy `services/local-ai/server.py` as a separate web service.
+
+### Option A: Railway (recommended)
+
+1. Create a new Railway project from this GitHub repo.
+2. Add a new service using the `services/local-ai` directory.
+3. Railway should detect `Dockerfile` automatically.
+4. Set environment variables on that Railway service:
+   - `PORT=8001`
+   - `ENABLE_OLLAMA_SCRIPT=false` (default; uses built-in script generator)
+   - Optional for Ollama-backed script generation:
+     - `ENABLE_OLLAMA_SCRIPT=true`
+     - `OLLAMA_URL=http://your-ollama-host:11434`
+     - `OLLAMA_MODEL=llama3.1:8b`
+5. Deploy and open the service URL.
+6. Verify with `GET /health` on the deployed URL.
+
+### Option B: Render
+
+1. New Web Service -> connect your repo.
+2. Root directory: `services/local-ai`
+3. Environment: Docker.
+4. Add the same env vars listed above.
+5. Deploy and verify `GET /health`.
+
+## Wire your Next.js app to hosted local AI
+
+In Vercel project env vars:
+
+```env
+LOCAL_AI_BASE_URL=https://your-local-ai-service-url
+```
+
+After saving env vars, redeploy your Next.js app.
