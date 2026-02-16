@@ -1,6 +1,5 @@
 import OpenAI from 'openai';
 import ffmpeg from 'fluent-ffmpeg';
-import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -9,8 +8,25 @@ import { promisify } from 'util';
 const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
 
-// Ensure ffmpeg binaries are available in serverless runtimes (e.g., Vercel).
-ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+function configureFfmpegPath() {
+    if (process.env.FFMPEG_PATH) {
+        ffmpeg.setFfmpegPath(process.env.FFMPEG_PATH);
+        return;
+    }
+
+    try {
+        // Optional dependency can be missing in some build environments.
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const installer = require('@ffmpeg-installer/ffmpeg');
+        if (installer?.path) {
+            ffmpeg.setFfmpegPath(installer.path);
+        }
+    } catch {
+        // Fall back to system ffmpeg in PATH if present.
+    }
+}
+
+configureFfmpegPath();
 
 function getOpenAIClient() {
     if (!process.env.OPENAI_API_KEY) {
