@@ -88,7 +88,12 @@ export default function UploadPage() {
                     router.push(`/video/${videoId}`);
                 } else if (data.video.processingStatus === 'failed') {
                     clearInterval(interval);
-                    setError('Video processing failed. Please try again.');
+                    const failureReason =
+                        typeof data.video.generatedAudioText === 'string' &&
+                            data.video.generatedAudioText.startsWith('Processing error:')
+                            ? data.video.generatedAudioText
+                            : 'Video processing failed. Please try again.';
+                    setError(failureReason);
                     setProcessing(false);
                     setProgress(0);
                 } else {

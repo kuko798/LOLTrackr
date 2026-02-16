@@ -142,11 +142,16 @@ async function processVideoInBackground(
         console.log(`Video ${videoId} processed successfully`);
     } catch (error) {
         console.error(`Video processing error for ${videoId}:`, error);
+        const processingError =
+            error instanceof Error ? error.message : 'Unknown processing error';
 
         // Mark as failed
         await prisma.video.update({
             where: { id: videoId },
-            data: { processingStatus: 'failed' }
+            data: {
+                processingStatus: 'failed',
+                generatedAudioText: `Processing error: ${processingError}`,
+            }
         });
     }
 }
