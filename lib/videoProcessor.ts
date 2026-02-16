@@ -1,4 +1,3 @@
-import OpenAI from 'openai';
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import os from 'os';
@@ -28,97 +27,60 @@ function configureFfmpegPath() {
 
 configureFfmpegPath();
 
-function getOpenAIClient() {
-    if (!process.env.OPENAI_API_KEY) {
-        throw new Error('OPENAI_API_KEY is not configured');
-    }
-
-    return new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-    });
-}
-
 function getLocalAiBaseUrl() {
     return process.env.LOCAL_AI_BASE_URL || '';
 }
 
 /**
- * Generate brain rot commentary using OpenAI
+ * Generate brain rot commentary using local AI service
  */
 export async function generateBrainRotScript(videoTitle: string): Promise<string> {
     const localAiBaseUrl = getLocalAiBaseUrl();
-    if (localAiBaseUrl) {
-        const response = await fetch(`${localAiBaseUrl}/generate-script`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ videoTitle }),
-        });
-
-        if (!response.ok) {
-            const body = await response.text();
-            throw new Error(`Local script generation failed: ${body || response.statusText}`);
-        }
-
-        const data = await response.json();
-        if (!data?.script || typeof data.script !== 'string') {
-            throw new Error('Local script generation returned invalid response');
-        }
-
-        return data.script;
+    if (!localAiBaseUrl) {
+        throw new Error('LOCAL_AI_BASE_URL is required. OpenAI fallback is disabled.');
     }
 
-    const openai = getOpenAIClient();
-    const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-            {
-                role: 'system',
-                content: `You are a brain rot content generator. Create short, chaotic, and absurdly funny commentary for videos that would appeal to Gen Z/Alpha humor. Use memes, internet slang, and random references. Keep it under 30 seconds of speech. Be wild, unhinged, and entertaining. Include phrases like "no cap", "deadass", "fr fr", "bussin", etc.`,
-            },
-            {
-                role: 'user',
-                content: `Generate brain rot commentary for a video titled: "${videoTitle}"`,
-            },
-        ],
-        max_tokens: 150,
+    const response = await fetch(`${localAiBaseUrl}/generate-script`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoTitle }),
     });
 
-    return completion.choices[0]?.message?.content || 'Yo this video is straight bussin fr fr no cap!';
+    if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`Local script generation failed: ${body || response.statusText}`);
+    }
+
+    const data = await response.json();
+    if (!data?.script || typeof data.script !== 'string') {
+        throw new Error('Local script generation returned invalid response');
+    }
+
+    return data.script;
 }
 
 /**
- * Generate audio from text using OpenAI TTS
+ * Generate audio from text using local AI TTS
  */
 export async function generateAudio(text: string, outputPath: string): Promise<string> {
     const localAiBaseUrl = getLocalAiBaseUrl();
-    if (localAiBaseUrl) {
-        const response = await fetch(`${localAiBaseUrl}/synthesize`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text }),
-        });
-
-        if (!response.ok) {
-            const body = await response.text();
-            throw new Error(`Local TTS failed: ${body || response.statusText}`);
-        }
-
-        const audioBuffer = Buffer.from(await response.arrayBuffer());
-        await writeFile(outputPath, audioBuffer);
-        return outputPath;
+    if (!localAiBaseUrl) {
+        throw new Error('LOCAL_AI_BASE_URL is required. OpenAI fallback is disabled.');
     }
 
-    const openai = getOpenAIClient();
-    const mp3 = await openai.audio.speech.create({
-        model: 'tts-1',
-        voice: 'onyx', // Changed to onyx for more energetic voice
-        input: text,
-        speed: 1.1, // Slightly faster for brain rot effect
+    const response = await fetch(`${localAiBaseUrl}/synthesize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
     });
 
-    const buffer = Buffer.from(await mp3.arrayBuffer());
-    await writeFile(outputPath, buffer);
+    if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`Local TTS failed: ${body || response.statusText}`);
+    }
 
+    const audioBuffer = Buffer.from(await response.arrayBuffer());
+    await writeFile(outputPath, audioBuffer);
     return outputPath;
 }
 
@@ -211,8 +173,7 @@ export async function processVideo(
         fs.mkdirSync(tmpDir, { recursive: true });
     }
 
-    const useLocalAi = Boolean(getLocalAiBaseUrl());
-    const audioPath = path.join(tmpDir, `${videoId}-audio.${useLocalAi ? 'wav' : 'mp3'}`);
+    const audioPath = path.join(tmpDir, `${videoId}-audio.wav`);
     const thumbnailPath = path.join(tmpDir, `${videoId}-thumb.jpg`);
     const outputPath = path.join(tmpDir, `${videoId}-processed.mp4`);
 
