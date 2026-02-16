@@ -38,10 +38,35 @@ function getOpenAIClient() {
     });
 }
 
+function getLocalAiBaseUrl() {
+    return process.env.LOCAL_AI_BASE_URL || '';
+}
+
 /**
  * Generate brain rot commentary using OpenAI
  */
 export async function generateBrainRotScript(videoTitle: string): Promise<string> {
+    const localAiBaseUrl = getLocalAiBaseUrl();
+    if (localAiBaseUrl) {
+        const response = await fetch(`${localAiBaseUrl}/generate-script`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ videoTitle }),
+        });
+
+        if (!response.ok) {
+            const body = await response.text();
+            throw new Error(`Local script generation failed: ${body || response.statusText}`);
+        }
+
+        const data = await response.json();
+        if (!data?.script || typeof data.script !== 'string') {
+            throw new Error('Local script generation returned invalid response');
+        }
+
+        return data.script;
+    }
+
     const openai = getOpenAIClient();
     const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
@@ -65,6 +90,24 @@ export async function generateBrainRotScript(videoTitle: string): Promise<string
  * Generate audio from text using OpenAI TTS
  */
 export async function generateAudio(text: string, outputPath: string): Promise<string> {
+    const localAiBaseUrl = getLocalAiBaseUrl();
+    if (localAiBaseUrl) {
+        const response = await fetch(`${localAiBaseUrl}/synthesize`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text }),
+        });
+
+        if (!response.ok) {
+            const body = await response.text();
+            throw new Error(`Local TTS failed: ${body || response.statusText}`);
+        }
+
+        const audioBuffer = Buffer.from(await response.arrayBuffer());
+        await writeFile(outputPath, audioBuffer);
+        return outputPath;
+    }
+
     const openai = getOpenAIClient();
     const mp3 = await openai.audio.speech.create({
         model: 'tts-1',
@@ -168,7 +211,8 @@ export async function processVideo(
         fs.mkdirSync(tmpDir, { recursive: true });
     }
 
-    const audioPath = path.join(tmpDir, `${videoId}-audio.mp3`);
+    const useLocalAi = Boolean(getLocalAiBaseUrl());
+    const audioPath = path.join(tmpDir, `${videoId}-audio.${useLocalAi ? 'wav' : 'mp3'}`);
     const thumbnailPath = path.join(tmpDir, `${videoId}-thumb.jpg`);
     const outputPath = path.join(tmpDir, `${videoId}-processed.mp4`);
 

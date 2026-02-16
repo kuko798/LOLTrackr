@@ -81,6 +81,12 @@ npm install
 2. Create an API key
 3. Ensure you have credits for GPT-4 and TTS usage
 
+### Optional: Free Self-Hosted AI
+
+If you want to avoid OpenAI API costs, use the local AI setup guide:
+
+- `LOCAL_AI_SETUP.md`
+
 ### 4. Google Cloud Storage Setup
 
 1. Create a GCP project at [Google Cloud Console](https://console.cloud.google.com/)
