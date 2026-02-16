@@ -1,5 +1,7 @@
 import OpenAI from 'openai';
 import ffmpeg from 'fluent-ffmpeg';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+import ffprobeInstaller from '@ffprobe-installer/ffprobe';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -7,6 +9,10 @@ import { promisify } from 'util';
 
 const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
+
+// Ensure ffmpeg binaries are available in serverless runtimes (e.g., Vercel).
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+ffmpeg.setFfprobePath(ffprobeInstaller.path);
 
 function getOpenAIClient() {
     if (!process.env.OPENAI_API_KEY) {
