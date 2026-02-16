@@ -11,30 +11,60 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  username      String    @unique
-  email         String    @unique
-  password      String
-  displayName   String
-  avatarUrl     String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  videos        Video[]
+  id                        String    @id @default(cuid())
+  username                  String    @unique
+  email                     String    @unique
+  password                  String
+  displayName               String
+  bio                       String?
+  avatarUrl                 String?
+  emailVerified             Boolean   @default(false)
+  emailVerificationToken    String?
+  emailVerificationExpires  DateTime?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+  videos                    Video[]
+  likes                     Like[]
+  comments                  Comment[]
 }
 
 model Video {
-  id                String    @id @default(cuid())
-  userId            String
-  user              User      @relation(fields: [userId], references: [id])
-  title             String
-  description       String?
-  originalVideoUrl  String
-  processedVideoUrl String?
-  thumbnailUrl      String?
+  id                 String    @id @default(cuid())
+  userId             String
+  user               User      @relation(fields: [userId], references: [id])
+  title              String
+  description        String?
+  originalVideoUrl   String
+  processedVideoUrl  String?
+  thumbnailUrl       String?
   generatedAudioText String?
-  duration          Float?
-  views             Int       @default(0)
-  processingStatus  String    @default("pending") // pending | processing | completed | failed
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  duration           Float?
+  views              Int       @default(0)
+  processingStatus   String    @default("pending") // pending | processing | completed | failed
+  likes              Like[]
+  comments           Comment[]
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  videoId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, videoId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String
+  videoId   String
+  content   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -1,0 +1,67 @@
+.interactions {
+    margin-top: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+}
+
+.statsRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+}
+
+.likeButton {
+    border: 1px solid var(--border-bright);
+    background: transparent;
+    color: var(--text-primary);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.liked {
+    background: var(--primary);
+}
+
+.commentForm {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.commentInput {
+    width: 100%;
+    background: var(--bg-darker);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+}
+
+.commentList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.commentItem {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-md);
+}
+
+.commentMeta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.error {
+    color: var(--error);
+    margin-bottom: var(--spacing-md);
+}

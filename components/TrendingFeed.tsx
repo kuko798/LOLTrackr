@@ -9,8 +9,7 @@ interface Video {
     title: string;
     thumbnailUrl: string;
     views: number;
-    likesCount?: number;
-    commentsCount?: number;
+    likesCount: number;
     createdAt: string;
     user: {
         username: string;
@@ -18,48 +17,37 @@ interface Video {
     };
 }
 
-export default function VideoFeed() {
+export default function TrendingFeed() {
     const [videos, setVideos] = useState<Video[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
 
     useEffect(() => {
-        async function fetchVideos() {
+        async function fetchTrending() {
             try {
-                const response = await fetch('/api/videos?status=completed&limit=12');
-                if (!response.ok) throw new Error('Failed to fetch videos');
-
+                const response = await fetch('/api/videos?status=completed&trending=true&limit=8');
+                if (!response.ok) throw new Error('Failed to fetch trending videos');
                 const data = await response.json();
-                setVideos(data.videos);
-            } catch (err) {
-                setError('Failed to load videos');
+                setVideos(data.videos || []);
+            } catch (error) {
+                console.error('Failed to load trending videos:', error);
             } finally {
                 setLoading(false);
             }
         }
-
-        fetchVideos();
+        fetchTrending();
     }, []);
 
     if (loading) {
         return (
             <div className={styles.loading}>
                 <div className="spinner"></div>
-                <p>Loading videos...</p>
+                <p>Loading trending videos...</p>
             </div>
         );
-    }
-
-    if (error) {
-        return <div className={styles.error}>{error}</div>;
     }
 
     if (videos.length === 0) {
-        return (
-            <div className={styles.empty}>
-                <p>No videos yet. Be the first to upload!</p>
-            </div>
-        );
+        return null;
     }
 
     return (

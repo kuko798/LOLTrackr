@@ -1,0 +1,32 @@
+.page {
+    min-height: calc(100vh - 80px);
+    padding: var(--spacing-2xl) 0;
+}
+
+.card {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.error {
+    color: var(--error);
+    margin-bottom: var(--spacing-md);
+}
+
+.success {
+    color: var(--success);
+    margin-bottom: var(--spacing-md);
+}
+
+.loading {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

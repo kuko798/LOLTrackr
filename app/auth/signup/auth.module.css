@@ -69,3 +69,13 @@
     padding: 0 var(--spacing-md);
     font-size: 0.875rem;
 }
+
+.successBox {
+    background: hsla(140, 70%, 50%, 0.1);
+    border: 1px solid var(--success);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    color: var(--success);
+    margin-bottom: var(--spacing-lg);
+    font-size: 0.9375rem;
+}

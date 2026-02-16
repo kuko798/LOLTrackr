@@ -2,13 +2,12 @@
 
 import { useEffect, useState, FormEvent } from 'react';
 import { getProviders, signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './auth.module.css';
 
 export default function SignUpPage() {
-    const router = useRouter();
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
     const [providers, setProviders] = useState<Record<string, any>>({});
 
@@ -25,6 +24,7 @@ export default function SignUpPage() {
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setError('');
+        setSuccess('');
         setLoading(true);
 
         const formData = new FormData(e.currentTarget);
@@ -60,20 +60,8 @@ export default function SignUpPage() {
                 return;
             }
 
-            // Auto sign in after successful signup
-            const result = await signIn('credentials', {
-                email,
-                password,
-                redirect: false,
-            });
-
-            if (result?.error) {
-                setError('Account created but sign in failed. Please sign in manually.');
-                setTimeout(() => router.push('/auth/signin'), 2000);
-            } else {
-                router.push('/dashboard');
-                router.refresh();
-            }
+            setSuccess(data.message || 'Account created. Check your email to verify your account.');
+            (e.currentTarget as HTMLFormElement).reset();
         } catch (err) {
             setError('An error occurred. Please try again.');
         } finally {
@@ -90,6 +78,12 @@ export default function SignUpPage() {
                 {error && (
                     <div className={styles.errorBox}>
                         {error}
+                    </div>
+                )}
+
+                {success && (
+                    <div className={styles.successBox}>
+                        {success}
                     </div>
                 )}
 

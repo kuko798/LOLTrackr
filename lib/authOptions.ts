@@ -47,6 +47,10 @@ export const authOptions: NextAuthOptions = {
                     throw new Error('Invalid password');
                 }
 
+                if (!user.emailVerified) {
+                    throw new Error('Please verify your email before signing in');
+                }
+
                 return {
                     id: user.id,
                     email: user.email,
@@ -93,6 +97,7 @@ export const authOptions: NextAuthOptions = {
                                     displayName: user.name || candidate,
                                     password: await bcrypt.hash(Math.random().toString(36), 10),
                                     avatarUrl: user.image || '',
+                                    emailVerified: true,
                                 },
                             });
                             break;

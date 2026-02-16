@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/authOptions';
 import prisma from '@/lib/prisma';
 import VideoPlayer from '@/components/VideoPlayer';
+import VideoInteractions from '@/components/VideoInteractions';
 import styles from './video.module.css';
 
 interface VideoPageProps {
@@ -9,6 +12,8 @@ interface VideoPageProps {
 
 export default async function VideoPage({ params }: VideoPageProps) {
     const { id } = await params;
+    const session = await getServerSession(authOptions);
+
     const video = await prisma.video.findUnique({
         where: { id },
         include: {
@@ -18,7 +23,19 @@ export default async function VideoPage({ params }: VideoPageProps) {
                     displayName: true,
                     avatarUrl: true,
                 }
-            }
+            },
+            _count: {
+                select: {
+                    likes: true,
+                    comments: true,
+                }
+            },
+            ...(session?.user?.id ? {
+                likes: {
+                    where: { userId: session.user.id },
+                    select: { id: true }
+                }
+            } : {})
         }
     });
 
@@ -26,27 +43,10 @@ export default async function VideoPage({ params }: VideoPageProps) {
         notFound();
     }
 
-    // Increment views (async, non-blocking for response)
     prisma.video.update({
         where: { id },
         data: { views: { increment: 1 } }
     }).catch(console.error);
-
-    // Prepare video data for the component, including the incremented view count
-    const videoData = {
-        id: video.id,
-        title: video.title,
-        description: video.description,
-        processedVideoUrl: video.processedVideoUrl,
-        thumbnailUrl: video.thumbnailUrl,
-        generatedAudioText: video.generatedAudioText,
-        views: video.views + 1, // Display the incremented view count
-        createdAt: video.createdAt.toISOString(),
-        user: {
-            username: video.user.username,
-            displayName: video.user.displayName,
-        },
-    };
 
     return (
         <div className={styles.videoPage}>
@@ -68,24 +68,31 @@ export default async function VideoPage({ params }: VideoPageProps) {
                         )}
 
                         <div className={styles.videoInfo}>
-                            <h1 className={styles.title}>{videoData.title}</h1>
+                            <h1 className={styles.title}>{video.title}</h1>
 
                             <div className={styles.meta}>
-                                <span>{videoData.views} views</span>
-                                <span>•</span>
-                                <span>{new Date(videoData.createdAt).toLocaleDateString()}</span>
+                                <span>{video.views + 1} views</span>
+                                <span>-</span>
+                                <span>{new Date(video.createdAt).toLocaleDateString()}</span>
                             </div>
 
-                            {videoData.description && (
-                                <p className={styles.description}>{videoData.description}</p>
+                            {video.description && (
+                                <p className={styles.description}>{video.description}</p>
                             )}
 
-                            {videoData.generatedAudioText && (
+                            {video.generatedAudioText && (
                                 <div className={styles.aiScript}>
-                                    <h3>🤖 AI Generated Script</h3>
-                                    <p>{videoData.generatedAudioText}</p>
+                                    <h3>AI Generated Script</h3>
+                                    <p>{video.generatedAudioText}</p>
                                 </div>
                             )}
+
+                            <VideoInteractions
+                                videoId={video.id}
+                                initialLikesCount={video._count.likes}
+                                initialCommentsCount={video._count.comments}
+                                initialLiked={Array.isArray(video.likes) ? video.likes.length > 0 : false}
+                            />
                         </div>
                     </div>
 
@@ -93,19 +100,19 @@ export default async function VideoPage({ params }: VideoPageProps) {
                         <div className={`${styles.creatorCard} card`}>
                             <h3>Creator</h3>
                             <a
-                                href={`/profile/${videoData.user.username}`}
+                                href={`/profile/${video.user.username}`}
                                 className={styles.creatorLink}
                             >
                                 <div className={styles.creatorInfo}>
                                     <div className={styles.avatar}>
-                                        {videoData.user.displayName.charAt(0).toUpperCase()}
+                                        {video.user.displayName.charAt(0).toUpperCase()}
                                     </div>
                                     <div>
                                         <div className={styles.displayName}>
-                                            {videoData.user.displayName}
+                                            {video.user.displayName}
                                         </div>
                                         <div className={styles.username}>
-                                            @{videoData.user.username}
+                                            @{video.user.username}
                                         </div>
                                     </div>
                                 </div>

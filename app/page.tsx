@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import VideoFeed from '@/components/VideoFeed';
+import TrendingFeed from '@/components/TrendingFeed';
 import styles from './page.module.css';
 
 export default function HomePage() {
@@ -33,6 +34,13 @@ export default function HomePage() {
                 <div className="container">
                     <h2 className="text-center">Latest Uploads</h2>
                     <VideoFeed />
+                </div>
+            </section>
+
+            <section className={styles.feedSection}>
+                <div className="container">
+                    <h2 className="text-center">Trending Now</h2>
+                    <TrendingFeed />
                 </div>
             </section>
         </div>

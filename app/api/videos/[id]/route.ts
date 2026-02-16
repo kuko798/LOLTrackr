@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/authOptions';
 import prisma from '@/lib/prisma';
 
 export async function GET(
@@ -6,6 +8,7 @@ export async function GET(
     context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const session = await getServerSession(authOptions);
         const { id } = await context.params;
         const video = await prisma.video.findUnique({
             where: { id },
@@ -16,7 +19,19 @@ export async function GET(
                         displayName: true,
                         avatarUrl: true,
                     }
-                }
+                },
+                _count: {
+                    select: {
+                        likes: true,
+                        comments: true,
+                    }
+                },
+                ...(session?.user?.id ? {
+                    likes: {
+                        where: { userId: session.user.id },
+                        select: { id: true }
+                    }
+                } : {})
             }
         });
 
@@ -24,7 +39,14 @@ export async function GET(
             return NextResponse.json({ error: 'Video not found' }, { status: 404 });
         }
 
-        return NextResponse.json({ video });
+        return NextResponse.json({
+            video: {
+                ...video,
+                likesCount: video._count.likes,
+                commentsCount: video._count.comments,
+                likedByCurrentUser: Array.isArray(video.likes) ? video.likes.length > 0 : false,
+            }
+        });
     } catch (error: any) {
         console.error('Fetch video error:', error);
         return NextResponse.json(

@@ -7,6 +7,8 @@ interface VideoCardProps {
         title: string;
         thumbnailUrl: string;
         views: number;
+        likesCount?: number;
+        commentsCount?: number;
         createdAt: string;
         user: {
             username: string;
@@ -23,7 +25,7 @@ export default function VideoCard({ video }: VideoCardProps) {
             <div className={styles.thumbnail}>
                 <img src={video.thumbnailUrl} alt={video.title} />
                 <div className={styles.overlay}>
-                    <div className={styles.playIcon}>▶</div>
+                    <div className={styles.playIcon}>Play</div>
                 </div>
             </div>
 
@@ -38,7 +40,9 @@ export default function VideoCard({ video }: VideoCardProps) {
                 </Link>
                 <div className={styles.meta}>
                     <span>{video.views} views</span>
-                    <span>•</span>
+                    <span>-</span>
+                    <span>{video.likesCount || 0} likes</span>
+                    <span>-</span>
                     <span>{timeAgo}</span>
                 </div>
             </div>
