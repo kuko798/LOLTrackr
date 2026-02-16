@@ -25,39 +25,70 @@ export async function GET(req: NextRequest) {
         }
 
         // Fetch videos with user information
-        const videos = await prisma.video.findMany({
-            where,
-            include: {
-                user: {
-                    select: {
-                        username: true,
-                        displayName: true,
-                        avatarUrl: true,
-                    }
+        let videos: any[];
+        try {
+            videos = await prisma.video.findMany({
+                where,
+                include: {
+                    user: {
+                        select: {
+                            username: true,
+                            displayName: true,
+                            avatarUrl: true,
+                        }
+                    },
+                    _count: {
+                        select: {
+                            likes: true,
+                            comments: true,
+                        }
+                    },
+                    ...(session?.user?.id ? {
+                        likes: {
+                            where: { userId: session.user.id },
+                            select: { id: true }
+                        }
+                    } : {})
                 },
-                _count: {
-                    select: {
-                        likes: true,
-                        comments: true,
-                    }
-                },
-                ...(session?.user?.id ? {
+                orderBy: trending ? {
                     likes: {
-                        where: { userId: session.user.id },
-                        select: { id: true }
+                        _count: 'desc'
                     }
-                } : {})
-            },
-            orderBy: trending ? {
-                likes: {
-                    _count: 'desc'
-                }
-            } : {
-                createdAt: 'desc'
-            },
-            take: limit,
-            skip: skip,
-        });
+                } : {
+                    createdAt: 'desc'
+                },
+                take: limit,
+                skip: skip,
+            });
+        } catch (error: any) {
+            // Fallback if Like/Comment tables are not created yet.
+            if (typeof error?.message === 'string' && error.message.includes('relation')) {
+                const fallbackVideos = await prisma.video.findMany({
+                    where,
+                    include: {
+                        user: {
+                            select: {
+                                username: true,
+                                displayName: true,
+                                avatarUrl: true,
+                            }
+                        }
+                    },
+                    orderBy: {
+                        createdAt: 'desc'
+                    },
+                    take: limit,
+                    skip: skip,
+                });
+                videos = fallbackVideos.map((video) => ({
+                    ...video,
+                    _count: { likes: 0, comments: 0 },
+                    likes: [],
+                }));
+            } else {
+                throw error;
+            }
+        }
 
         const serializedVideos = videos.map((video: any) => ({
             ...video,

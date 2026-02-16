@@ -10,30 +10,58 @@ export async function GET(
     try {
         const session = await getServerSession(authOptions);
         const { id } = await context.params;
-        const video = await prisma.video.findUnique({
-            where: { id },
-            include: {
-                user: {
-                    select: {
-                        username: true,
-                        displayName: true,
-                        avatarUrl: true,
+        let video: any;
+        try {
+            video = await prisma.video.findUnique({
+                where: { id },
+                include: {
+                    user: {
+                        select: {
+                            username: true,
+                            displayName: true,
+                            avatarUrl: true,
+                        }
+                    },
+                    _count: {
+                        select: {
+                            likes: true,
+                            comments: true,
+                        }
+                    },
+                    ...(session?.user?.id ? {
+                        likes: {
+                            where: { userId: session.user.id },
+                            select: { id: true }
+                        }
+                    } : {})
+                }
+            });
+        } catch (error: any) {
+            // Fallback if Like/Comment tables are not created yet.
+            if (typeof error?.message === 'string' && error.message.includes('relation')) {
+                video = await prisma.video.findUnique({
+                    where: { id },
+                    include: {
+                        user: {
+                            select: {
+                                username: true,
+                                displayName: true,
+                                avatarUrl: true,
+                            }
+                        }
                     }
-                },
-                _count: {
-                    select: {
-                        likes: true,
-                        comments: true,
-                    }
-                },
-                ...(session?.user?.id ? {
-                    likes: {
-                        where: { userId: session.user.id },
-                        select: { id: true }
-                    }
-                } : {})
+                });
+                if (video) {
+                    video = {
+                        ...video,
+                        _count: { likes: 0, comments: 0 },
+                        likes: [],
+                    };
+                }
+            } else {
+                throw error;
             }
-        });
+        }
 
         if (!video) {
             return NextResponse.json({ error: 'Video not found' }, { status: 404 });

@@ -80,6 +80,9 @@ export default function UploadPage() {
             try {
                 const response = await fetch(`/api/videos/${videoId}`);
                 const data = await response.json();
+                if (!response.ok || !data?.video) {
+                    throw new Error(data?.error || 'Failed to check video status');
+                }
 
                 if (data.video.processingStatus === 'completed') {
                     clearInterval(interval);
@@ -101,8 +104,9 @@ export default function UploadPage() {
                     const progressEstimate = 60 + (attempts / maxAttempts) * 35;
                     setProgress(Math.min(95, progressEstimate));
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Status check error:', err);
+                setError(err?.message || 'Failed to check processing status');
             }
 
             if (attempts >= maxAttempts) {
