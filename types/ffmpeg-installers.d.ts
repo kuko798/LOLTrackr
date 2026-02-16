@@ -4,10 +4,3 @@ declare module '@ffmpeg-installer/ffmpeg' {
     };
     export default ffmpegInstaller;
 }
-
-declare module '@ffprobe-installer/ffprobe' {
-    const ffprobeInstaller: {
-        path: string;
-    };
-    export default ffprobeInstaller;
-}
