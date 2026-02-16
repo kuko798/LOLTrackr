@@ -88,8 +88,10 @@ export async function uploadToGCS(
         });
 
         blobStream.on('finish', async () => {
-            // Make the file public (optional - you can use signed URLs instead)
-            await blob.makePublic();
+            // Object ACL updates fail when Uniform Bucket-Level Access is enabled.
+            if (process.env.GCP_ENABLE_OBJECT_ACL === 'true') {
+                await blob.makePublic();
+            }
 
             const publicUrl = `https://storage.googleapis.com/${getBucketName()}/${destination}`;
 
@@ -118,8 +120,10 @@ export async function uploadFileToGCS(
         },
     });
 
-    const file = bucket.file(destination);
-    await file.makePublic();
+    if (process.env.GCP_ENABLE_OBJECT_ACL === 'true') {
+        const file = bucket.file(destination);
+        await file.makePublic();
+    }
 
     const publicUrl = `https://storage.googleapis.com/${getBucketName()}/${destination}`;
 
