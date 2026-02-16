@@ -1,14 +1,63 @@
 import { Storage } from '@google-cloud/storage';
-import path from 'path';
 
-// Initialize GCP Storage client
-const storage = new Storage({
-    projectId: process.env.GCP_PROJECT_ID,
-    keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-});
+let bucketInstance: ReturnType<Storage['bucket']> | null = null;
 
-const bucketName = process.env.GCP_BUCKET_NAME || 'loltrackr-videos';
-const bucket = storage.bucket(bucketName);
+function getStorageClient(): Storage {
+    const projectId = process.env.GCP_PROJECT_ID;
+    const serviceAccountJson = process.env.GCP_SERVICE_ACCOUNT_JSON;
+    const serviceAccountBase64 = process.env.GCP_SERVICE_ACCOUNT_BASE64;
+    const clientEmail = process.env.GCP_CLIENT_EMAIL;
+    const privateKey = process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    const keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+
+    if (serviceAccountJson) {
+        return new Storage({
+            projectId,
+            credentials: JSON.parse(serviceAccountJson),
+        });
+    }
+
+    if (serviceAccountBase64) {
+        return new Storage({
+            projectId,
+            credentials: JSON.parse(Buffer.from(serviceAccountBase64, 'base64').toString('utf-8')),
+        });
+    }
+
+    if (clientEmail && privateKey) {
+        return new Storage({
+            projectId,
+            credentials: {
+                client_email: clientEmail,
+                private_key: privateKey,
+            },
+        });
+    }
+
+    if (keyFilename) {
+        return new Storage({
+            projectId,
+            keyFilename,
+        });
+    }
+
+    return new Storage({ projectId });
+}
+
+function getBucket() {
+    if (bucketInstance) {
+        return bucketInstance;
+    }
+
+    const bucketName = process.env.GCP_BUCKET_NAME || 'loltrackr-videos';
+    const storage = getStorageClient();
+    bucketInstance = storage.bucket(bucketName);
+    return bucketInstance;
+}
+
+function getBucketName() {
+    return process.env.GCP_BUCKET_NAME || 'loltrackr-videos';
+}
 
 export interface UploadResult {
     publicUrl: string;
@@ -23,6 +72,7 @@ export async function uploadToGCS(
     destination: string,
     contentType?: string
 ): Promise<UploadResult> {
+    const bucket = getBucket();
     const blob = bucket.file(destination);
 
     const blobStream = blob.createWriteStream({
@@ -41,7 +91,7 @@ export async function uploadToGCS(
             // Make the file public (optional - you can use signed URLs instead)
             await blob.makePublic();
 
-            const publicUrl = `https://storage.googleapis.com/${bucketName}/${destination}`;
+            const publicUrl = `https://storage.googleapis.com/${getBucketName()}/${destination}`;
 
             resolve({
                 publicUrl,
@@ -60,6 +110,7 @@ export async function uploadFileToGCS(
     filePath: string,
     destination: string
 ): Promise<UploadResult> {
+    const bucket = getBucket();
     await bucket.upload(filePath, {
         destination,
         metadata: {
@@ -70,7 +121,7 @@ export async function uploadFileToGCS(
     const file = bucket.file(destination);
     await file.makePublic();
 
-    const publicUrl = `https://storage.googleapis.com/${bucketName}/${destination}`;
+    const publicUrl = `https://storage.googleapis.com/${getBucketName()}/${destination}`;
 
     return {
         publicUrl,
@@ -82,6 +133,7 @@ export async function uploadFileToGCS(
  * Delete a file from GCS
  */
 export async function deleteFromGCS(filename: string): Promise<void> {
+    const bucket = getBucket();
     await bucket.file(filename).delete();
 }
 
@@ -89,6 +141,7 @@ export async function deleteFromGCS(filename: string): Promise<void> {
  * Generate a signed URL for temporary access
  */
 export async function getSignedUrl(filename: string, expiresIn: number = 3600): Promise<string> {
+    const bucket = getBucket();
     const [url] = await bucket.file(filename).getSignedUrl({
         action: 'read',
         expires: Date.now() + expiresIn * 1000,
