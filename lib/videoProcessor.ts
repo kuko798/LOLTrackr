@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { promisify } from 'util';
 
@@ -142,7 +143,7 @@ export async function processVideo(
 ): Promise<ProcessVideoResult> {
     const { videoPath, videoTitle, userId, videoId } = options;
 
-    const tmpDir = path.join(process.cwd(), 'tmp');
+    const tmpDir = path.join(os.tmpdir(), 'loltrackr');
     if (!fs.existsSync(tmpDir)) {
         fs.mkdirSync(tmpDir, { recursive: true });
     }

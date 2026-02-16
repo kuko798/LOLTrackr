@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma';
 import { uploadToGCS, uploadFileToGCS } from '@/lib/storage';
 import { processVideo } from '@/lib/videoProcessor';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { promisify } from 'util';
 
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Create upload directory
-        const uploadsDir = path.join(process.cwd(), 'tmp', 'uploads');
+        const uploadsDir = path.join(os.tmpdir(), 'loltrackr', 'uploads');
         if (!fs.existsSync(uploadsDir)) {
             await mkdir(uploadsDir, { recursive: true });
         }
