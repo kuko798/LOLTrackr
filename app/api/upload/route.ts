@@ -209,17 +209,30 @@ async function processVideoInBackground(
         const processedGcsPath = `${userId}/processed/${videoId}.mp4`;
         const thumbnailGcsPath = `${userId}/thumbnails/${videoId}.jpg`;
 
-        const [processedUpload, thumbnailUpload] = await Promise.all([
-            uploadFileToGCS(result.processedVideoPath, processedGcsPath),
-            uploadFileToGCS(result.thumbnailPath, thumbnailGcsPath),
-        ]);
+        // Upload processed video (always exists)
+        let processedUpload;
+        if (fs.existsSync(result.processedVideoPath)) {
+            processedUpload = await uploadFileToGCS(result.processedVideoPath, processedGcsPath);
+        } else {
+            throw new Error('Processed video file not found');
+        }
 
-        // Update video record
+        // Upload thumbnail if it exists and is different from original
+        let thumbnailUpload;
+        const hasThumbnail = fs.existsSync(result.thumbnailPath) &&
+                            result.thumbnailPath !== videoPath &&
+                            result.thumbnailPath !== result.processedVideoPath;
+
+        if (hasThumbnail) {
+            thumbnailUpload = await uploadFileToGCS(result.thumbnailPath, thumbnailGcsPath);
+        }
+
+        // Update video record with proper URLs
         await prisma.video.update({
             where: { id: videoId },
             data: {
                 processedVideoUrl: processedUpload.publicUrl,
-                thumbnailUrl: thumbnailUpload.publicUrl,
+                thumbnailUrl: thumbnailUpload?.publicUrl || processedUpload.publicUrl,
                 generatedAudioText: result.audioScript,
                 duration: result.duration,
                 processingStatus: 'completed',
