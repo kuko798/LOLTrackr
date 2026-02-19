@@ -387,17 +387,36 @@ export async function processVideo(
         // Generate audio from script (optional)
         const audioGenerated = await generateAudio(audioScript, audioPath);
 
-        // Get video duration
-        const duration = await getVideoDuration(videoPath);
+        // Try to get video duration (may fail in serverless environments)
+        let duration = 0;
+        try {
+            duration = await getVideoDuration(videoPath);
+        } catch (error) {
+            console.warn('Could not get video duration (FFprobe not available):', error);
+            // Use a default duration or get from file stats
+            const stats = fs.statSync(videoPath);
+            duration = 30; // Default to 30 seconds if we can't probe
+        }
 
-        // Extract thumbnail
-        await extractThumbnail(videoPath, thumbnailPath);
+        // Try to extract thumbnail (may fail in serverless environments)
+        try {
+            await extractThumbnail(videoPath, thumbnailPath);
+        } catch (error) {
+            console.warn('Could not extract thumbnail (FFmpeg not available):', error);
+            // Create a placeholder thumbnail or skip it
+            // For now, we'll just leave thumbnailPath pointing to a non-existent file
+        }
 
-        // If audio was generated, merge it with video; otherwise use original video
+        // If audio was generated, try to merge it with video
         if (audioGenerated && fs.existsSync(audioPath)) {
-            await mergeAudioWithVideo(videoPath, audioPath, outputPath);
-            // Clean up temporary audio file
-            await unlink(audioPath);
+            try {
+                await mergeAudioWithVideo(videoPath, audioPath, outputPath);
+                await unlink(audioPath);
+            } catch (error) {
+                console.warn('Could not merge audio (FFmpeg not available), using original video:', error);
+                fs.copyFileSync(videoPath, outputPath);
+                if (fs.existsSync(audioPath)) await unlink(audioPath);
+            }
         } else {
             // No audio generation, just copy the original video
             console.log('No audio generated, using original video');
@@ -406,7 +425,7 @@ export async function processVideo(
 
         return {
             processedVideoPath: outputPath,
-            thumbnailPath,
+            thumbnailPath: fs.existsSync(thumbnailPath) ? thumbnailPath : videoPath,
             audioScript,
             duration,
         };
