@@ -53,8 +53,8 @@ export default async function VideoPage({ params }: VideoPageProps) {
             <div className="container">
                 <div className={styles.videoContainer}>
                     <div className={styles.playerSection}>
-                        {video.processingStatus === 'completed' && video.processedVideoUrl ? (
-                            <VideoPlayer videoUrl={video.processedVideoUrl} />
+                        {video.processedVideoUrl || video.originalVideoUrl ? (
+                            <VideoPlayer videoUrl={video.processedVideoUrl || video.originalVideoUrl} />
                         ) : (
                             <div className={styles.processingMessage}>
                                 <p>
@@ -62,7 +62,7 @@ export default async function VideoPage({ params }: VideoPageProps) {
                                         ? 'Video is being processed...'
                                         : video.processingStatus === 'pending'
                                             ? 'Video is queued for processing...'
-                                            : 'Video processing failed'}
+                                            : 'Video upload failed'}
                                 </p>
                             </div>
                         )}

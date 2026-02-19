@@ -163,14 +163,16 @@ async function processVideoInline(
         console.log(`Video ${videoId} processed successfully (inline)`);
     } catch (error) {
         console.error(`Video processing error for ${videoId}:`, error);
+        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
         const processingError =
             error instanceof Error ? error.message : 'Unknown processing error';
 
-        // Mark as failed
+        // Mark as failed and keep original video playable
         await prisma.video.update({
             where: { id: videoId },
             data: {
                 processingStatus: 'failed',
+                processedVideoUrl: null,  // Ensure we don't have a broken URL
                 generatedAudioText: `Processing error: ${processingError}`,
             }
         });
@@ -250,14 +252,16 @@ async function processVideoInBackground(
         console.log(`Video ${videoId} processed successfully`);
     } catch (error) {
         console.error(`Video processing error for ${videoId}:`, error);
+        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
         const processingError =
             error instanceof Error ? error.message : 'Unknown processing error';
 
-        // Mark as failed
+        // Mark as failed and keep original video playable
         await prisma.video.update({
             where: { id: videoId },
             data: {
                 processingStatus: 'failed',
+                processedVideoUrl: null,  // Ensure we don't have a broken URL
                 generatedAudioText: `Processing error: ${processingError}`,
             }
         });
