@@ -117,27 +117,30 @@ async function processVideoInline(
         const processedGcsPath = `${userId}/processed/${videoId}.mp4`;
         const thumbnailGcsPath = `${userId}/thumbnails/${videoId}.jpg`;
 
-        const uploads = [];
-
-        // Upload processed video
+        // Upload processed video (always exists)
+        let processedUpload;
         if (fs.existsSync(result.processedVideoPath)) {
-            uploads.push(uploadFileToGCS(result.processedVideoPath, processedGcsPath));
+            processedUpload = await uploadFileToGCS(result.processedVideoPath, processedGcsPath);
+        } else {
+            throw new Error('Processed video file not found');
         }
 
-        // Upload thumbnail if it exists
-        if (fs.existsSync(result.thumbnailPath) && result.thumbnailPath !== videoPath) {
-            uploads.push(uploadFileToGCS(result.thumbnailPath, thumbnailGcsPath));
+        // Upload thumbnail if it exists and is different from original
+        let thumbnailUpload;
+        const hasThumbnail = fs.existsSync(result.thumbnailPath) &&
+                            result.thumbnailPath !== videoPath &&
+                            result.thumbnailPath !== result.processedVideoPath;
+
+        if (hasThumbnail) {
+            thumbnailUpload = await uploadFileToGCS(result.thumbnailPath, thumbnailGcsPath);
         }
 
-        const uploadResults = await Promise.all(uploads);
-        const [processedUpload, thumbnailUpload] = uploadResults;
-
-        // Update video record
+        // Update video record with proper URLs
         await prisma.video.update({
             where: { id: videoId },
             data: {
-                processedVideoUrl: processedUpload?.publicUrl || uploadResults[0]?.publicUrl,
-                thumbnailUrl: thumbnailUpload?.publicUrl || processedUpload?.publicUrl,
+                processedVideoUrl: processedUpload.publicUrl,
+                thumbnailUrl: thumbnailUpload?.publicUrl || processedUpload.publicUrl,
                 generatedAudioText: result.audioScript,
                 duration: result.duration,
                 processingStatus: 'completed',
