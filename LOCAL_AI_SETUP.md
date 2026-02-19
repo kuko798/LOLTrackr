@@ -36,6 +36,40 @@ When `LOCAL_AI_BASE_URL` is set:
 - Audio generation uses local TTS via `/synthesize`
 - OpenAI is not required for this flow
 
+## Script Generation Features
+
+The `/generate-script` endpoint now supports multiple commentary styles:
+
+### Available Styles
+- **hype** (default): Energetic, exciting commentary with Gen-Z slang
+- **roast**: Playful, sarcastic roasting of the video title
+- **wholesome**: Positive, uplifting commentary
+- **conspiracy**: Dramatic conspiracy-theory style commentary
+- **shocked**: Bewildered, surprised reaction commentary
+
+### Usage Example
+
+```json
+POST /generate-script
+{
+  "videoTitle": "Cat learns to play piano",
+  "style": "wholesome"
+}
+```
+
+### Generation Parameters
+
+The LLM uses optimized parameters for creative, varied output:
+- Temperature: 0.9 (high creativity)
+- Top-p: 0.95 (nucleus sampling)
+- Repeat penalty: 1.2 (reduces repetition)
+- Automatic retry with exponential backoff (3 attempts)
+- Response validation and cleanup
+
+### Fallback Mode
+
+When `ENABLE_OLLAMA_SCRIPT=false`, the service uses enhanced template-based generation with style support for instant responses without requiring Ollama.
+
 ## Notes
 
 - This runs on your own machine, so usage cost is compute only.

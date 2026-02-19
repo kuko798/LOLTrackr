@@ -31,10 +31,23 @@ function getLocalAiBaseUrl() {
     return process.env.LOCAL_AI_BASE_URL || '';
 }
 
+export type CommentaryStyle = 'hype' | 'roast' | 'wholesome' | 'conspiracy' | 'shocked';
+
+/**
+ * Get a random commentary style for variety
+ */
+export function getRandomCommentaryStyle(): CommentaryStyle {
+    const styles: CommentaryStyle[] = ['hype', 'roast', 'wholesome', 'conspiracy', 'shocked'];
+    return styles[Math.floor(Math.random() * styles.length)];
+}
+
 /**
  * Generate brain rot commentary using local AI service
  */
-export async function generateBrainRotScript(videoTitle: string): Promise<string> {
+export async function generateBrainRotScript(
+    videoTitle: string,
+    style: CommentaryStyle = 'hype'
+): Promise<string> {
     const localAiBaseUrl = getLocalAiBaseUrl();
     if (!localAiBaseUrl) {
         throw new Error('LOCAL_AI_BASE_URL is required. OpenAI fallback is disabled.');
@@ -43,7 +56,7 @@ export async function generateBrainRotScript(videoTitle: string): Promise<string
     const response = await fetch(`${localAiBaseUrl}/generate-script`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoTitle }),
+        body: JSON.stringify({ videoTitle, style }),
     });
 
     if (!response.ok) {
@@ -178,8 +191,9 @@ export async function processVideo(
     const outputPath = path.join(tmpDir, `${videoId}-processed.mp4`);
 
     try {
-        // Generate brain rot script
-        const audioScript = await generateBrainRotScript(videoTitle);
+        // Generate brain rot script with random style for variety
+        const style = getRandomCommentaryStyle();
+        const audioScript = await generateBrainRotScript(videoTitle, style);
 
         // Generate audio from script
         await generateAudio(audioScript, audioPath);
