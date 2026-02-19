@@ -88,10 +88,8 @@ export async function uploadToGCS(
         });
 
         blobStream.on('finish', async () => {
-            // Object ACL updates fail when Uniform Bucket-Level Access is enabled.
-            if (process.env.GCP_ENABLE_OBJECT_ACL === 'true') {
-                await blob.makePublic();
-            }
+            // Don't try to set ACLs - bucket has Uniform Bucket-Level Access
+            // Bucket-level IAM permissions (allUsers = Storage Object Viewer) will apply instead
 
             const publicUrl = `https://storage.googleapis.com/${getBucketName()}/${destination}`;
 
@@ -120,24 +118,10 @@ export async function uploadFileToGCS(
         },
     };
 
-    // Try to make file publicly readable during upload
-    try {
-        uploadOptions.predefinedAcl = 'publicRead';
-    } catch (e) {
-        console.warn('Could not set predefinedAcl, bucket might have uniform access:', e);
-    }
+    // Don't set predefinedAcl if bucket has Uniform Bucket-Level Access
+    // Bucket-level IAM permissions (allUsers = Storage Object Viewer) will apply instead
 
     await bucket.upload(filePath, uploadOptions);
-
-    // Also try makePublic as a fallback
-    if (process.env.GCP_ENABLE_OBJECT_ACL === 'true') {
-        try {
-            const file = bucket.file(destination);
-            await file.makePublic();
-        } catch (e) {
-            console.warn('Could not make file public via ACL:', e);
-        }
-    }
 
     const publicUrl = `https://storage.googleapis.com/${getBucketName()}/${destination}`;
 

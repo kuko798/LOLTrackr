@@ -6,7 +6,8 @@
       "Bash(git push)",
       "Bash(ffmpeg:*)",
       "Bash(node:*)",
-      "Bash(gcloud auth activate-service-account:*)"
+      "Bash(gcloud auth activate-service-account:*)",
+      "Bash(when uniform bucket-level access is enabled\"\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
