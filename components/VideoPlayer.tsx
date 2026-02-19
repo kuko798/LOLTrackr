@@ -12,6 +12,9 @@ export default function VideoPlayer({ videoUrl }: VideoPlayerProps) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    console.log('VideoPlayer - Loading URL:', videoUrl);
 
     function togglePlay() {
         if (videoRef.current) {
@@ -44,6 +47,13 @@ export default function VideoPlayer({ videoUrl }: VideoPlayerProps) {
 
     return (
         <div className={styles.playerContainer}>
+            {error && (
+                <div style={{ color: 'red', padding: '20px', background: '#ffe6e6', marginBottom: '10px' }}>
+                    <strong>Video Error:</strong> {error}
+                    <br />
+                    <small>URL: {videoUrl}</small>
+                </div>
+            )}
             <video
                 ref={videoRef}
                 src={videoUrl}
@@ -51,6 +61,13 @@ export default function VideoPlayer({ videoUrl }: VideoPlayerProps) {
                 onClick={togglePlay}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
+                onError={(e) => {
+                    console.error('Video loading error:', e);
+                    console.error('Video URL:', videoUrl);
+                    const target = e.target as HTMLVideoElement;
+                    setError(`Failed to load video. Error code: ${target.error?.code}, Message: ${target.error?.message || 'Unknown error'}`);
+                }}
+                crossOrigin="anonymous"
             />
 
             <div className={styles.controls}>
