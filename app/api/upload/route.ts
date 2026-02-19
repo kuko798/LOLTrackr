@@ -50,31 +50,40 @@ export async function POST(req: NextRequest) {
         const gcsPath = `${userId}/originals/${filename}`;
         const uploadResult = await uploadFileToGCS(filepath, gcsPath);
 
+        // Check if we're on Vercel (serverless)
+        const isVercel = process.env.VERCEL === '1';
+
         // Create database record
         const video = await prisma.video.create({
             data: {
                 userId: session.user.id,
                 title,
                 description: description || '',
-                originalVideoUrl: uploadResult.publicUrl, // Corrected from fileUrl
-                processingStatus: 'pending'
+                originalVideoUrl: uploadResult.publicUrl,
+                processingStatus: isVercel ? 'processing' : 'pending'
             }
         });
 
-        // Trigger background processing (async)
-        // Note: In production, use a job queue like Bull or Inngest
-        processVideoInBackground(video.id, filepath, title, userId).catch(console.error);
+        // On Vercel, process inline to avoid file system issues
+        // On other platforms, use background processing
+        if (isVercel) {
+            // Process immediately in same request
+            await processVideoInline(video.id, filepath, title, userId);
+        } else {
+            // Trigger background processing (async)
+            processVideoInBackground(video.id, filepath, title, userId).catch(console.error);
 
-        // Clean up original file after a delay
-        setTimeout(async () => {
-            try {
-                if (fs.existsSync(filepath)) {
-                    await unlink(filepath);
+            // Clean up original file after a delay
+            setTimeout(async () => {
+                try {
+                    if (fs.existsSync(filepath)) {
+                        await unlink(filepath);
+                    }
+                } catch (err) {
+                    console.error('Cleanup error:', err);
                 }
-            } catch (err) {
-                console.error('Cleanup error:', err);
-            }
-        }, 5000);
+            }, 5000);
+        }
 
         return NextResponse.json({
             message: 'Upload successful, processing started',
@@ -86,6 +95,89 @@ export async function POST(req: NextRequest) {
             { error: error.message || 'Upload failed' },
             { status: 500 }
         );
+    }
+}
+
+async function processVideoInline(
+    videoId: string,
+    videoPath: string,
+    title: string,
+    userId: string
+) {
+    try {
+        // Process video with AI
+        const result = await processVideo({
+            videoPath,
+            videoTitle: title,
+            userId,
+            videoId,
+        });
+
+        // Upload processed files to GCS
+        const processedGcsPath = `${userId}/processed/${videoId}.mp4`;
+        const thumbnailGcsPath = `${userId}/thumbnails/${videoId}.jpg`;
+
+        const uploads = [];
+
+        // Upload processed video
+        if (fs.existsSync(result.processedVideoPath)) {
+            uploads.push(uploadFileToGCS(result.processedVideoPath, processedGcsPath));
+        }
+
+        // Upload thumbnail if it exists
+        if (fs.existsSync(result.thumbnailPath) && result.thumbnailPath !== videoPath) {
+            uploads.push(uploadFileToGCS(result.thumbnailPath, thumbnailGcsPath));
+        }
+
+        const uploadResults = await Promise.all(uploads);
+        const [processedUpload, thumbnailUpload] = uploadResults;
+
+        // Update video record
+        await prisma.video.update({
+            where: { id: videoId },
+            data: {
+                processedVideoUrl: processedUpload?.publicUrl || uploadResults[0]?.publicUrl,
+                thumbnailUrl: thumbnailUpload?.publicUrl || processedUpload?.publicUrl,
+                generatedAudioText: result.audioScript,
+                duration: result.duration,
+                processingStatus: 'completed',
+            }
+        });
+
+        // Clean up temporary files
+        try {
+            if (fs.existsSync(videoPath)) await unlink(videoPath);
+            if (fs.existsSync(result.processedVideoPath) && result.processedVideoPath !== videoPath) {
+                await unlink(result.processedVideoPath);
+            }
+            if (fs.existsSync(result.thumbnailPath) && result.thumbnailPath !== videoPath) {
+                await unlink(result.thumbnailPath);
+            }
+        } catch (cleanupError) {
+            console.error('Cleanup error:', cleanupError);
+        }
+
+        console.log(`Video ${videoId} processed successfully (inline)`);
+    } catch (error) {
+        console.error(`Video processing error for ${videoId}:`, error);
+        const processingError =
+            error instanceof Error ? error.message : 'Unknown processing error';
+
+        // Mark as failed
+        await prisma.video.update({
+            where: { id: videoId },
+            data: {
+                processingStatus: 'failed',
+                generatedAudioText: `Processing error: ${processingError}`,
+            }
+        });
+
+        // Try to clean up
+        try {
+            if (fs.existsSync(videoPath)) await unlink(videoPath);
+        } catch (cleanupError) {
+            console.error('Cleanup error:', cleanupError);
+        }
     }
 }
 
