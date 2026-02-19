@@ -375,7 +375,7 @@ export async function processVideo(
         fs.mkdirSync(tmpDir, { recursive: true });
     }
 
-    const audioPath = path.join(tmpDir, `${videoId}-audio.wav`);
+    const audioPath = path.join(tmpDir, `${videoId}-audio.mp3`);
     const thumbnailPath = path.join(tmpDir, `${videoId}-thumb.jpg`);
     const outputPath = path.join(tmpDir, `${videoId}-processed.mp4`);
 
