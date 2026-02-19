@@ -14,14 +14,8 @@ const nextConfig = {
             bodySizeLimit: '100mb',
         },
     },
-    // Exclude these packages from webpack bundling (server-side only)
-    serverComponentsExternalPackages: [
-        '@ffmpeg-installer/ffmpeg',
-        '@ffprobe-installer/ffprobe',
-        'fluent-ffmpeg',
-    ],
     webpack: (config, { isServer }) => {
-        // Exclude from client-side bundle
+        // Exclude ffmpeg/ffprobe packages from client-side bundle
         if (!isServer) {
             config.resolve.fallback = {
                 ...config.resolve.fallback,
@@ -32,6 +26,15 @@ const nextConfig = {
                 path: false,
                 os: false,
             };
+        } else {
+            // For server-side, mark these as external (don't bundle)
+            const externals = config.externals || [];
+            config.externals = [
+                ...Array.isArray(externals) ? externals : [externals],
+                '@ffmpeg-installer/ffmpeg',
+                '@ffprobe-installer/ffprobe',
+                'fluent-ffmpeg',
+            ];
         }
 
         return config;
