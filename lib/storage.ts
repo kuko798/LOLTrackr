@@ -113,16 +113,30 @@ export async function uploadFileToGCS(
     destination: string
 ): Promise<UploadResult> {
     const bucket = getBucket();
-    await bucket.upload(filePath, {
+    const uploadOptions: any = {
         destination,
         metadata: {
             cacheControl: 'public, max-age=31536000',
         },
-    });
+    };
 
+    // Try to make file publicly readable during upload
+    try {
+        uploadOptions.predefinedAcl = 'publicRead';
+    } catch (e) {
+        console.warn('Could not set predefinedAcl, bucket might have uniform access:', e);
+    }
+
+    await bucket.upload(filePath, uploadOptions);
+
+    // Also try makePublic as a fallback
     if (process.env.GCP_ENABLE_OBJECT_ACL === 'true') {
-        const file = bucket.file(destination);
-        await file.makePublic();
+        try {
+            const file = bucket.file(destination);
+            await file.makePublic();
+        } catch (e) {
+            console.warn('Could not make file public via ACL:', e);
+        }
     }
 
     const publicUrl = `https://storage.googleapis.com/${getBucketName()}/${destination}`;
