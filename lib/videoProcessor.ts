@@ -8,20 +8,35 @@ const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
 
 function configureFfmpegPath() {
+    // Configure FFmpeg path
     if (process.env.FFMPEG_PATH) {
         ffmpeg.setFfmpegPath(process.env.FFMPEG_PATH);
-        return;
+    } else {
+        try {
+            // Optional dependency can be missing in some build environments.
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+            if (ffmpegInstaller?.path) {
+                ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+            }
+        } catch {
+            // Fall back to system ffmpeg in PATH if present.
+        }
     }
 
-    try {
-        // Optional dependency can be missing in some build environments.
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const installer = require('@ffmpeg-installer/ffmpeg');
-        if (installer?.path) {
-            ffmpeg.setFfmpegPath(installer.path);
+    // Configure FFprobe path
+    if (process.env.FFPROBE_PATH) {
+        ffmpeg.setFfprobePath(process.env.FFPROBE_PATH);
+    } else {
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
+            if (ffprobeInstaller?.path) {
+                ffmpeg.setFfprobePath(ffprobeInstaller.path);
+            }
+        } catch {
+            // Fall back to system ffprobe in PATH if present.
         }
-    } catch {
-        // Fall back to system ffmpeg in PATH if present.
     }
 }
 
